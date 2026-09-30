@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌿 Trắc nghiệm YHCT — Học nhanh, nhớ lâu</title>
+<style>
+:root{
+  --primary:#2e7d32;--primary-light:#66bb6a;--primary-dark:#1b5e20;
+  --accent:#ff6f00;--accent-light:#ffa726;
+  --correct:#2e7d32;--wrong:#c62828;
+  --bg:#f1f8e9;--card:#ffffff;--text:#1a1a1a;--text-light:#666;
+  --shadow:0 4px 20px rgba(0,0,0,.08);
+  --shadow-lg:0 20px 40px rgba(46,125,50,.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+body{
+  background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 50%,#a5d6a7 100%);
+  min-height:100vh;padding:16px;display:flex;justify-content:center;align-items:flex-start;
+  -webkit-font-smoothing:antialiased;
+}
+.app{max-width:920px;width:100%;background:var(--card);border-radius:28px;
+  box-shadow:var(--shadow-lg);overflow:hidden;margin:16px 0;position:relative}
+.header{background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+  padding:28px 32px;color:#fff;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-50%;right:-10%;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);border-radius:50%}
+.header::after{content:'🌿';position:absolute;right:24px;bottom:12px;font-size:64px;opacity:.15}
+.header h1{font-size:24px;font-weight:800;letter-spacing:.3px;margin-bottom:6px;position:relative}
+.header p{font-size:14px;opacity:.9;position:relative}
+.header .stats-row{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;position:relative}
+.stat-chip{background:rgba(255,255,255,.2);backdrop-filter:blur(8px);
+  padding:8px 16px;border-radius:30px;font-size:13px;font-weight:600;
+  display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.25)}
+.stat-chip .val{background:#fff;color:var(--primary-dark);padding:2px 10px;border-radius:20px;font-size:12px}
+
+.mode-bar{display:flex;gap:8px;padding:18px 24px 0;flex-wrap:wrap;border-bottom:1px solid #e8f5e9}
+.mode-tab{padding:10px 22px;border:none;background:transparent;color:var(--text-light);
+  font-weight:600;font-size:14px;cursor:pointer;border-radius:12px 12px 0 0;
+  transition:all .2s;display:flex;align-items:center;gap:6px}
+.mode-tab:hover{background:#f1f8e9;color:var(--primary)}
+.mode-tab.active{background:var(--primary);color:#fff;box-shadow:0 -2px 8px rgba(46,125,50,.2)}
+
+.content{padding:24px 28px 32px}
+
+.progress-wrap{width:100%;height:8px;background:#e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:20px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary-light),var(--primary));
+  width:0%;transition:width .5s cubic-bezier(.4,0,.2,1);border-radius:8px}
+
+.q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.q-num{font-size:13px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1.5px}
+.streak{font-size:13px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:4px;
+  background:#fff3e0;padding:4px 12px;border-radius:20px;border:1px solid #ffe0b2}
+
+.question-box{background:linear-gradient(135deg,#f1f8e9,#e8f5e9);border-radius:20px;
+  padding:22px 24px;margin-bottom:20px;border-left:6px solid var(--primary);
+  box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.question-text{font-size:18px;font-weight:700;color:#1a1a1a;line-height:1.55}
+
+.mnemonic{background:linear-gradient(135deg,#fff8e1,#ffecb3);border-radius:14px;
+  padding:14px 18px;margin-bottom:20px;border-left:4px solid var(--accent);
+  font-size:14px;color:#6d4c00;line-height:1.6;display:none;animation:slideIn .3s}
+.mnemonic.show{display:block}
+.mnemonic::before{content:'💡 Mẹo nhớ: ';font-weight:800;color:var(--accent)}
+
+.options{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;padding:15px 18px;background:#fff;
+  border:2px solid #e0e0e0;border-radius:14px;cursor:pointer;transition:all .2s;
+  font-size:16px;text-align:left;color:#333;font-weight:500;width:100%;
+  position:relative;overflow:hidden}
+.opt:hover:not(.locked){border-color:var(--primary-light);background:#f1f8e9;transform:translateX(4px)}
+.opt.selected{border-color:var(--accent);background:#fff8e1}
+.opt.correct{border-color:var(--correct);background:#e8f5e9;color:var(--correct);font-weight:700;
+  animation:pop .4s}
+.opt.correct::after{content:'✓';position:absolute;right:16px;font-size:20px;font-weight:900;color:var(--correct)}
+.opt.wrong{border-color:var(--wrong);background:#ffebee;color:var(--wrong);font-weight:700;
+  animation:shake .4s}
+.opt.wrong::after{content:'✗';position:absolute;right:16px;font-size:20px;font-weight:900;color:var(--wrong)}
+.opt.locked{cursor:default;opacity:.9}
+.opt .letter{display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;background:var(--primary);color:#fff;border-radius:50%;
+  margin-right:14px;font-weight:800;font-size:14px;flex-shrink:0;transition:all .2s}
+.opt.correct .letter{background:var(--correct)}
+.opt.wrong .letter{background:var(--wrong)}
+.opt.selected .letter{background:var(--accent)}
+
+.feedback{margin-top:16px;padding:14px 18px;border-radius:12px;font-weight:600;
+  font-size:15px;display:none;animation:slideIn .3s;line-height:1.5}
+.feedback.show{display:block}
+.feedback.ok{background:#e8f5e9;color:var(--correct);border-left:5px solid var(--correct)}
+.feedback.no{background:#ffebee;color:var(--wrong);border-left:5px solid var(--wrong)}
+
+.nav-row{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+.btn{flex:1;min-width:140px;padding:14px 24px;border:none;border-radius:50px;
+  font-weight:700;font-size:15px;cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;
+  box-shadow:0 4px 14px rgba(46,125,50,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(46,125,50,.4)}
+.btn-ghost{background:#e8f5e9;color:var(--primary-dark);flex:0 0 auto;min-width:auto;padding:14px 22px}
+.btn-ghost:hover{background:#c8e6c9}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none}
+
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+.review-list{max-height:70vh;overflow-y:auto;padding-right:6px}
+.review-list::-webkit-scrollbar{width:6px}
+.review-list::-webkit-scrollbar-thumb{background:var(--primary-light);border-radius:10px}
+.review-item{background:#fff;border-radius:16px;padding:18px 20px;margin-bottom:12px;
+  border-left:5px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.review-q{font-weight:700;color:var(--text);font-size:15px;margin-bottom:8px;line-height:1.5}
+.review-a{color:var(--correct);font-weight:700;font-size:14px;
+  display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.review-a::before{content:'✓';font-size:16px;font-weight:900;flex-shrink:0}
+.review-user{margin-top:6px;font-size:13px;color:var(--text-light)}
+.review-user.wrong{color:var(--wrong);font-weight:600}
+.review-mnemonic{margin-top:8px;font-size:13px;color:#8d6e00;background:#fff8e1;
+  padding:8px 12px;border-radius:8px;border-left:3px solid var(--accent)}
+
+.timer{font-family:'Courier New',monospace;font-weight:800;font-size:16px;color:var(--accent);
+  background:#fff3e0;padding:6px 14px;border-radius:20px;border:1px solid #ffe0b2}
+
+.empty{text-align:center;padding:60px 20px;color:var(--text-light)}
+.empty .icon{font-size:56px;margin-bottom:16px}
+
+@media(max-width:600px){
+  body{padding:8px}
+  .app{border-radius:20px;margin:8px 0}
+  .header{padding:22px 20px}
+  .header h1{font-size:19px}
+  .header .stats-row{gap:8px}
+  .stat-chip{padding:6px 12px;font-size:11px}
+  .content{padding:18px 16px 24px}
+  .question-text{font-size:16px}
+  .opt{font-size:14px;padding:13px 14px}
+  .opt .letter{width:28px;height:28px;font-size:13px;margin-right:10px}
+  .btn{font-size:14px;padding:12px 18px}
+  .mode-tab{padding:8px 14px;font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>🌿 Trắc Nghiệm Y Học Cổ Truyền</h1>
+    <p>214 câu • Đáp án chuẩn • Mẹo nhớ dễ dàng</p>
+    <div class="stats-row">
+      <div class="stat-chip">📊 Câu <span class="val" id="s-progress">1/214</span></div>
+      <div class="stat-chip">✅ Đúng <span class="val" id="s-correct">0</span></div>
+      <div class="stat-chip">❌ Sai <span class="val" id="s-wrong">0</span></div>
+      <div class="stat-chip">🏆 Điểm <span class="val" id="s-score">0</span></div>
+    </div>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-tab active" data-mode="practice">📖 Luyện tập</button>
+    <button class="mode-tab" data-mode="review">📋 Ôn tập</button>
+    <button class="mode-tab" data-mode="exam">⏱️ Thi thử</button>
+  </div>
+
+  <div class="content">
+    <!-- Practice / Exam view -->
+    <div id="view-quiz">
+      <div class="progress-wrap"><div class="progress-fill" id="progress-fill"></div></div>
+
+      <div class="q-header">
+        <div class="q-num" id="q-num">Câu hỏi 1</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="streak" id="streak" style="display:none">🔥 <span id="streak-val">0</span> chuỗi đúng</div>
+          <div class="timer" id="timer" style="display:none">⏱ 00:00</div>
+        </div>
+      </div>
+
+      <div class="question-box">
+        <div class="question-text" id="q-text">Đang tải…</div>
+      </div>
+
+      <div class="mnemonic" id="mnemonic"></div>
+
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+
+      <div class="nav-row">
+        <button class="btn btn-ghost" id="btn-prev" disabled>← Trước</button>
+        <button class="btn btn-ghost" id="btn-hint">💡 Gợi ý</button>
+        <button class="btn btn-primary" id="btn-next">Tiếp theo →</button>
+      </div>
+    </div>
+
+    <!-- Review view -->
+    <div id="view-review" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <h2 style="color:var(--primary);font-size:18px">📋 Toàn bộ câu hỏi & đáp án</h2>
+        <button class="btn btn-ghost" id="btn-export" style="flex:0 0 auto;padding:8px 16px;font-size:13px">📥 Xuất kết quả</button>
+      </div>
+      <div class="review-list" id="review-list"></div>
+    </div>
+
+    <!-- Exam result -->
+    <div id="view-result" style="display:none">
+      <div class="empty">
+        <div class="icon">🎉</div>
+        <h2 style="color:var(--primary);margin-bottom:12px">Hoàn thành bài thi!</h2>
+        <p style="font-size:18px;margin-bottom:8px">Số câu đúng: <strong id="r-correct" style="color:var(--correct)">0</strong> / <span id="r-total">214</span></p>
+        <p style="font-size:18px;margin-bottom:24px">Điểm số: <strong id="r-score" style="color:var(--accent);font-size:24px">0</strong></p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btn-restart" style="flex:0 0 auto">🔄 Làm lại</button>
+          <button class="btn btn-ghost" id="btn-review-now" style="flex:0 0 auto">📋 Xem đáp án</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DỮ LIỆU 214 CÂU HỎI — ĐÁP ÁN ĐÚNG LẤY TỪ PHẦN TÔ ĐẬM TRONG FILE
+   ============================================================ */
+const DATA = [
+{q:"Danh y Tuệ Tĩnh phát triển nghề y vào thế kỷ thứ mấy?",o:["Thế kỷ 13","Thế kỷ 14","Thế kỷ 15","Thế kỷ 16"],c:1,m:"Tuệ Tĩnh (Nguyễn Bá Tĩnh) sống thế kỷ 14 — trước Lê Hữu Trác 4 thế kỷ. Nhớ: 'Tuệ Tĩnh 14, Hải Thượng 18'."},
+{q:"Hải Thượng Lãn Ông Lê Hữu Trác nổi tiếng vào thế kỷ thứ mấy?",o:["Thế kỷ 16","Thế kỷ 17","Thế kỷ 18","Thế kỷ 19"],c:2,m:"Lê Hữu Trác (1720–1791) → thế kỷ 18. Ông là danh y lớn nhất VN thời Lê-Trịnh."},
+{q:"Danh y Tuệ Tĩnh để lại cho đời sau tác phẩm nào?",o:["Châm cứu tiệp hiệu diễn ca","Hải Thượng y tông tâm lĩnh","Nam dược thần hiệu","Cây thuốc vị thuốc Việt Nam"],c:2,m:"'Nam dược thần hiệu' — Tuệ Tĩnh. 'Hải Thượng y tông tâm lĩnh' — Lê Hữu Trác."},
+{q:"\"Nam dược trị nam nhân\" có nghĩa là gì?",o:["Lấy cây thuốc nước Nam trị cho người nước Nam","Lấy cây thuốc nước Nam trị cho người nước ngoài","Lấy cây thuốc nước ngoài trị cho người nước Nam","Lấy cây thuốc nước ngoài trị cho người nước ngoài"],c:0,m:"Câu nói nổi tiếng của Tuệ Tĩnh: dùng thuốc Nam chữa bệnh cho người Nam — đề cao y học dân tộc."},
+{q:"Danh y Lê Hữu Trác để lại cho đời sau tác phẩm nào?",o:["Châm cứu tiệp hiệu diễn ca","Hải Thượng y tông tâm lĩnh","Nam dược thần hiệu","Cây thuốc vị thuốc Việt Nam"],c:1,m:"'Hải Thượng y tông tâm lĩnh' — bộ sách y học đồ sộ 66 quyển của Lê Hữu Trác."},
+{q:"Danh y Nguyễn Đại Năng để lại cho đời sau tác phẩm nào?",o:["Châm cứu tiệp hiệu diễn ca","Hải Thượng y tông tâm lĩnh","Nam dược thần hiệu","Cây thuốc vị thuốc Việt Nam"],c:0,m:"'Châm cứu tiệp hiệu diễn ca' — Nguyễn Đại Năng. Nhớ: 'Năng châm cứu'."},
+{q:"Theo Y học cổ truyền có bao nhiêu phương pháp chẩn đoán bệnh?",o:["2 phương pháp","3 phương pháp","4 phương pháp","5 phương pháp"],c:2,m:"Tứ chẩn: Vọng (nhìn) — Văn (nghe/ngửi) — Vấn (hỏi) — Thiết (sờ nắn). 'Tứ' = 4."},
+{q:"Phương pháp chẩn đoán \"Nhìn\" là?",o:["Vọng chẩn","Văn chẩn","Vấn chẩn","Thiết chẩn"],c:0,m:"Vọng = nhìn. Văn = nghe/ngửi. Vấn = hỏi. Thiết = sờ nắn."},
+{q:"Phương pháp chẩn đoán \"Hỏi\" là?",o:["Vọng chẩn","Văn chẩn","Vấn chẩn","Thiết chẩn"],c:2,m:"Vấn = hỏi (Vấn đáp). Nhớ: 'Vấn' gần với 'vấn đáp'."},
+{q:"Phương pháp chẩn đoán \"Nghe ngửi\" là?",o:["Vọng chẩn","Văn chẩn","Vấn chẩn","Thiết chẩn"],c:1,m:"Văn = nghe + ngửi (văn = văn văn). Phân biệt với Vấn (hỏi)."},
+{q:"Phương pháp chẩn đoán \"Sờ nắn\" là?",o:["Vọng chẩn","Văn chẩn","Vấn chẩn","Thiết chẩn"],c:3,m:"Thiết = sờ nắn, bắt mạch. Nhớ: 'Thiết' như 'thiết bị' cầm nắm."},
+{q:"Trong phương pháp \"Vọng\", thường vọng cái gì trước?",o:["Vọng tay","Vọng chẩn","Vọng thần","Vọng thần mình"],c:2,m:"Vọng thần trước — xem tinh thần, sắc mặt tổng quát trước khi xem chi tiết."},
+{q:"Khi xem sắc, bệnh nhân có chứng nhiệt ta thấy?",o:["Sắc trắng","Sắc vàng","Sắc xanh","Sắc đỏ"],c:3,m:"Nhiệt → đỏ (như lửa). Hàn → trắng. Thấp → vàng. Ứ huyết/đau → xanh."},
+{q:"Khi xem sắc, bệnh nhân có chứng thấp ta thấy?",o:["Sắc trắng","Sắc vàng","Sắc xanh","Sắc đỏ"],c:1,m:"Thấp → vàng (như da vàng do thấp). Nhớ: 'Thấp vàng, nhiệt đỏ, hàn trắng, ứ xanh'."},
+{q:"Khi xem sắc, bệnh nhân có chứng hư hàn, mất máu ta thấy?",o:["Sắc trắng","Sắc vàng","Sắc xanh","Sắc đỏ"],c:0,m:"Hư hàn/mất máu → trắng nhợt (thiếu máu)."},
+{q:"Khi xem sắc, bệnh nhân có chứng Đau, ứ huyết ta thấy?",o:["Sắc trắng","Sắc vàng","Sắc xanh","Sắc đỏ"],c:2,m:"Đau/ứ huyết → xanh tím (khí huyết ứ trệ)."},
+{q:"Khi xem hình thái, bệnh nhân da khô, lông tóc gãy rụng là bệnh thuộc tạng?",o:["Tỳ","Can","Thận","Phế"],c:3,m:"Phế chủ bì mao (da lông). Phế hư → da khô, lông rụng."},
+{q:"Khi xem hình thái, bệnh nhân cơ teo nhẽo, chảy xệ là bệnh thuộc tạng?",o:["Tỳ","Can","Thận","Tâm"],c:0,m:"Tỳ chủ cơ nhục (cơ bắp). Tỳ hư → cơ teo nhẽo, chảy xệ."},
+{q:"Khi xem hình thái, bệnh nhân xương yếu, răng lung lay, chậm mọc là bệnh thuộc tạng?",o:["Phế","Tỳ","Thận","Can"],c:2,m:"Thận chủ cốt tủy (xương, răng). Thận hư → xương yếu, răng lung lay."},
+{q:"Khi xem môi, bệnh nhân môi đỏ khô là bệnh thuộc?",o:["Hàn","Nhiệt","Ứ huyết","Huyết hư"],c:1,m:"Môi đỏ khô = nhiệt (nóng)."},
+{q:"Khi xem môi, bệnh nhân môi trắng nhợt là bệnh thuộc?",o:["Hàn","Nhiệt","Ứ huyết","Huyết hư"],c:3,m:"Môi trắng nhợt = huyết hư (thiếu máu)."},
+{q:"Khi xem môi, bệnh nhân môi xanh tím là bệnh thuộc?",o:["Hàn","Nhiệt","Ứ huyết","Huyết hư"],c:2,m:"Môi xanh tím = ứ huyết (khí huyết ứ trệ)."},
+{q:"Khi xem môi, bệnh nhân môi xanh đen là bệnh thuộc?",o:["Hàn","Nhiệt","Ứ huyết","Huyết hư"],c:0,m:"Môi xanh đen = hàn (lạnh). Xanh đen là màu hàn."},
+{q:"Trong vấn chấn, thầy thuốc thường hỏi về?",o:["Học tập","Công tác","Thi cử","Ăn uống"],c:3,m:"Vấn chẩn hỏi về ăn uống, giấc ngủ, đại tiểu tiện, mồ hôi... — sinh hoạt hàng ngày."},
+{q:"Trong vấn chấn, thầy thuốc thường hỏi về?",o:["Học tập","Công tác","Hàn nhiệt","Thi cử"],c:2,m:"Hỏi hàn nhiệt (nóng lạnh) là một trong thập vấn."},
+{q:"Trong vấn chấn, thầy thuốc thường hỏi về?",o:["Học tập","Công tác","Thi cử","Ăn uống"],c:3,m:"Ăn uống thuộc thập vấn (10 câu hỏi chẩn đoán)."},
+{q:"Trong vấn chấn, thầy thuốc thường hỏi về?",o:["Học tập","Công tác","Mồ hôi","Thi cử"],c:2,m:"Mồ hôi (hãn) là một trong thập vấn — hỏi ra mồ hôi thế nào."},
+{q:"Trong vấn chấn, thầy thuốc thường hỏi về?",o:["Giấc ngủ","Học tập","Công tác","Thi cử"],c:0,m:"Giấc ngủ (mị) là một trong thập vấn."},
+{q:"Kinh mạch gồm có:",o:["10 kinh, 2 mạch","11 kinh, 2 mạch","12 kinh, 2 mạch","13 kinh, 2 mạch"],c:2,m:"12 chính kinh + 2 mạch (Nhâm, Đốc) = 14 đường. Nhớ: '12 kinh, 2 mạch'."},
+{q:"Ở tay có bao nhiêu đường kinh?",o:["4","5","6","7"],c:2,m:"Mỗi tay có 6 kinh: 3 âm (Phế, Tâm, Tâm bào) + 3 dương (Đại trường, Tiểu trường, Tam tiêu)."},
+{q:"Ở tay có bao nhiêu kinh âm?",o:["1","2","3","4"],c:2,m:"3 kinh âm ở tay: Phế, Tâm, Tâm bào."},
+{q:"Ở tay có bao nhiêu kinh dương?",o:["1","2","3","4"],c:2,m:"3 kinh dương ở tay: Đại trường, Tiểu trường, Tam tiêu."},
+{q:"Ba kinh âm ở tay gồm:",o:["Phế, Tâm, Tâm bào","Phế, Tâm, Tỳ","Phế, Tâm, Tiểu trường","Phế, Tâm, Tam tiêu"],c:0,m:"3 âm tay: Phế — Tâm — Tâm bào. (Tỳ, Can, Thận là âm chân)."},
+{q:"Ba kinh dương ở tay gồm:",o:["Phế, Tâm, Tâm bào","Đại trường, Tiểu trường, Tam tiêu","Đại trường, Tiểu trường, Tâm","Đại trường, Phế, Tâm"],c:1,m:"3 dương tay: Đại trường — Tiểu trường — Tam tiêu."},
+{q:"Ở chân có bao nhiêu đường kinh?",o:["5","6","7","8"],c:1,m:"Mỗi chân có 6 kinh: 3 âm (Tỳ, Can, Thận) + 3 dương (Vị, Đờm, Bàng quang)."},
+{q:"Có bao nhiêu kinh dương ở chân?",o:["2","3","4","5"],c:1,m:"3 dương chân: Vị — Đờm — Bàng quang."},
+{q:"Có bao nhiêu kinh âm ở chân?",o:["3","4","5","6"],c:0,m:"3 âm chân: Tỳ — Can — Thận."},
+{q:"Ba kinh âm ở chân gồm:",o:["Phế, Tỳ, Thận","Tâm, Tỳ, Thận","Tỳ, Can, Thận","Tâm, Tỳ, Thận"],c:2,m:"3 âm chân: Tỳ — Can — Thận. Nhớ: 'Tỳ Can Thận' = tam âm chân."},
+{q:"Ba kinh dương ở chân gồm:",o:["Đờm, Can, Thận","Bàng quang, Đờm, Thận","Vị, Bàng quang, Đờm","Đờm, Vị, Đại trường"],c:2,m:"3 dương chân: Vị — Bàng quang — Đờm. Nhớ: 'Vị Bàng Đờm'."},
+{q:"Khí huyết trong đường kinh đi theo quy luật?",o:["Âm thẳng, dương thẳng","Âm thẳng, dương giáng","Âm giáng, dương giáng","Âm giáng, dương thẳng"],c:1,m:"Kinh âm đi từ ngực ra tay (thẳng lên), kinh dương đi từ tay lên đầu rồi xuống (giáng). Nhớ: 'Âm thăng, dương giáng'."},
+{q:"Huyệt chủ điều trị vùng đầu, mặt?",o:["Hợp cốc","Ủy trung","Nội quan","Tam âm giao"],c:0,m:"Hợp cốc (LI4) — huyệt tổng trị đầu mặt. Câu nói: 'Hợp cốc trị đầu mặt'."},
+{q:"Huyệt chủ điều trị vùng vai, gáy?",o:["Hợp cốc","Liệt khuyết","Ủy trung","Tam âm giao"],c:1,m:"Liệt khuyết (LU7) — huyệt trị vai gáy. Nhớ: 'Liệt khuyết vai gáy'."},
+{q:"Huyệt chủ điều trị vùng lưng, thắt lưng?",o:["Liệt khuyết","Ủy trung","Nội quan","Tam âm giao"],c:1,m:"Ủy trung (BL40) — huyệt trị lưng thắt lưng. Câu: 'Yêu bối ủy trung cầu'."},
+{q:"Huyệt chủ điều trị vùng bụng trên?",o:["Tam âm giao","Túc tam lý","Nội quan","Hợp cốc"],c:2,m:"Nội quan (PC6) — huyệt trị bụng trên, nôn, đau dạ dày."},
+{q:"Huyệt chủ điều trị vùng bụng dưới?",o:["Hợp cốc","Tam âm giao","Nội quan","Ủy trung"],c:1,m:"Tam âm giao (SP6) — huyệt trị bụng dưới, phụ khoa, tiết niệu."},
+{q:"Kinh âm ở tay đi từ?",o:["Từ ngón tay đến cánh tay","Từ ngực đi ra tay","Từ chân đi đến người","Từ người đi đến chân"],c:1,m:"Kinh âm tay: từ ngực → ra tay (từ trong ra ngoài)."},
+{q:"Kinh dương ở tay đi từ?",o:["Từ ngực đi lên tay","Từ bàn tay đi xuống ngực","Từ người đi xuống chân","Từ chân đi lên ngực"],c:1,m:"Kinh dương tay: từ tay → lên đầu → xuống ngực (từ ngoài vào trong)."},
+{q:"Kinh âm ở chân đi từ?",o:["Từ tay đi đến ngực","Từ ngực đi lên tay","Từ chân đi lên người","Từ người đi xuống chân"],c:2,m:"Kinh âm chân: từ bàn chân → lên bụng/ngực (từ dưới lên)."},
+{q:"Chống chỉ định của châm cứu?",o:["Mất ngủ","Táo bón","Bí tiểu","Viêm loét da"],c:3,m:"Viêm loét da — châm vào vùng tổn thương dễ nhiễm trùng. Chống chỉ định."},
+{q:"Chống chỉ định của châm cứu?",o:["Đau khớp","Đau bụng do rối loạn tiêu hóa","Đau dây thần kinh","Đau ngoại khoa"],c:3,m:"Đau ngoại khoa (cần mổ) — châm cứu không giải quyết được nguyên nhân."},
+{q:"Chống chỉ định của châm cứu?",o:["Đau do viêm dây thần kinh","Bí tiểu","Phụ nữ có thai 3 tháng đầu","Nấc"],c:2,m:"Phụ nữ mang thai 3 tháng đầu — châm cứu có thể gây sảy thai. Chống chỉ định tuyệt đối."},
+{q:"Chỉ định của châm cứu?",o:["Đau khớp","Suy nhược nặng","Viêm loét da nặng","Đau ngoại khoa"],c:0,m:"Đau khớp — châm cứu giảm đau hiệu quả. Các đáp án khác là chống chỉ định."},
+{q:"Tiêm thuốc vào huyệt gọi là?",o:["Tân châm","Thủy châm","Nhĩ châm","Châm tê"],c:1,m:"Thủy châm = tiêm thuốc vào huyệt (thủy = nước, thuốc lỏng)."},
+{q:"Châm ở tai gọi là?",o:["Tân châm","Thủy châm","Nhĩ châm","Châm tê"],c:2,m:"Nhĩ châm = châm ở tai (nhĩ = tai)."},
+{q:"Châm đê mô (Phẫu thuật) gọi là?",o:["Thủy châm","Châm tê","Tân châm","Nhĩ châm"],c:1,m:"Châm tê = gây tê để phẫu thuật. Nhớ: 'châm tê mổ'."},
+{q:"Loại kim ngắn gọi là?",o:["Kim tam lăng","Trường châm","Hoa mai châm","Hào châm"],c:3,m:"Hào châm = kim ngắn, thường dùng châm nông. Nhớ: 'hào' = ngắn."},
+{q:"Loại kim dài, mảnh gọi là?",o:["Hào châm","Hoa mai châm","Trường châm","Cự châm"],c:2,m:"Trường châm = kim dài (trường = dài)."},
+{q:"Loại kim vừa to vừa dài gọi là?",o:["Trường châm","Hào châm","Hoa mai châm","Cự châm"],c:3,m:"Cự châm = kim to và dài (cự = lớn)."},
+{q:"Kim đê chích nặn máu gọi là?",o:["Hào châm","Cự châm","Kim tam lăng","Hoa mai châm"],c:2,m:"Kim tam lăng = kim 3 cạnh, chích nặn máu. Nhớ: 'tam lăng = 3 cạnh'."},
+{q:"Góc châm vùng cơ dày là?",o:["10°-15°","30°-35°","40°-50°","60°-90°"],c:3,m:"Cơ dày → châm thẳng góc 60-90°. Nhớ: 'dày thẳng đứng'."},
+{q:"Góc châm vùng cơ mỏng là?",o:["5°-10°","15°-30°","35°-40°","45°-50°"],c:1,m:"Cơ mỏng → châm xiên 15-30°. Nhớ: 'mỏng xiên nhẹ'."},
+{q:"Góc châm vùng sát xương là?",o:["<40°","<30°","<20°","<15°"],c:3,m:"Sát xương → châm rất nông <15° (châm ngang). Nhớ: 'xương nông'."},
+{q:"Không phải cảm giác đắc khí mà bệnh nhân cảm nhận?",o:["Đau","Tê","Tức","Nặng"],c:0,m:"Đắc khí gây tê, tức, nặng — không gây đau. Đau là dấu hiệu châm sai."},
+{q:"Không phải cảm giác đắc khí mà thầy thuốc cảm nhận?",o:["Da thịt co lại","Kim bị rít chặt","Khó tiến hay lui kim","Kim lỏng lẻo"],c:3,m:"Đắc khí: kim rít, khó tiến lui, da co. 'Kim lỏng lẻo' là chưa đắc khí."},
+{q:"Nguyên nhân gây gãy kim thường do?",o:["Chất lượng kim tốt","Động tác nhẹ nhàng","Cơ vận xoắn","Châm đúng kỹ thuật"],c:2,m:"Cơ vận xoắn (co thắt) làm kim gãy. Các đáp án khác là yếu tố an toàn."},
+{q:"Khi bị choáng kim, người ta thường cho bệnh nhân?",o:["Nằm đầu thấp","Nằm đầu cao","Nằm nghiêng","Nằm sấp"],c:0,m:"Choáng kim → nằm đầu thấp để máu lên não. Nhớ: 'choáng = đầu thấp'."},
+{q:"Khi bị choáng kim, thường day các huyệt nào?",o:["Nhân trung","Túc tam lý","Tam âm giao","A Thị"],c:0,m:"Day Nhân trung để tỉnh. Nhớ: 'choáng → nhân trung'."},
+{q:"Không phải là phương pháp xác định huyệt?",o:["Theo mốc giải phẫu","Theo tư thế bệnh nhân","Theo chiều dài gang tay","Theo chiều dài đồng thân thốn"],c:1,m:"Xác định huyệt dựa: mốc giải phẫu, thốn (gang tay, đồng thân thốn). Tư thế không dùng để xác định."},
+{q:"Chiều ngang ngón tay 1 ngang liên đốt 1,2 là?",o:["1 thốn","2 thốn","3 thốn","4 thốn"],c:0,m:"1 ngón = 1 thốn. Nhớ: '1 ngón 1 thốn'."},
+{q:"Chiều ngang 4 ngón tay 2,3,4,5 lấy ngang liên đốt 2,3 của ngón 5 là?",o:["1 thốn","2 thốn","3 thốn","4 thốn"],c:2,m:"4 ngón = 3 thốn. Nhớ: '4 ngón 3 thốn'."},
+{q:"Xoa bóp bấm huyệt là kích thích?",o:["Hóa học","Toán học","Vật lý","Sinh học"],c:2,m:"Xoa bóp là kích thích cơ học/vật lý (lực, áp suất)."},
+{q:"Ưu điểm nào không phải thuộc xoa bóp?",o:["Đơn giản","Hiệu quả","Dễ làm","Chi phí cao"],c:3,m:"Xoa bóp có chi phí THẤP, không phải cao. Đó là ưu điểm."},
+{q:"Cuốn \"Nam dược thần hiệu\" ghi xoa bóp để trị rôm, sẩy là?",o:["Xoa bóp với bột hoạt thạch và bột đậu xanh","Xoa bóp với hạt cải ngâm dấm","Xoa bóp với hạt cải ngâm rượu","Xoa bóp với quế ngâm rượu"],c:0,m:"Rôm sẩy → bột hoạt thạch + đậu xanh (mát, hút ẩm)."},
+{q:"Cuốn \"Nam dược thần hiệu\" ghi xoa bóp để trị tê đại là?",o:["Xoa bóp với bột hoạt thạch và bột đậu xanh","Xoa bóp với hạt cải ngâm dấm","Xoa bóp với hạt cải ngâm rượu","Xoa bóp với quế ngâm rượu"],c:1,m:"Tê đại → hạt cải ngâm dấm (kích thích tuần hoàn)."},
+{q:"Cuốn \"Nam dược thần hiệu\" ghi xoa bóp để trị đau lưng là?",o:["Xoa bóp với bột hoạt thạch và bột đậu xanh","Xoa bóp với hạt cải ngâm dấm","Xoa bóp với hạt cải ngâm rượu","Xoa bóp với quế ngâm rượu"],c:2,m:"Đau lưng → hạt cải ngâm rượu (rượu nóng, kích thích)."},
+{q:"Cuốn \"Nam dược thần hiệu\" ghi xoa bóp để trị bại liệt là?",o:["Xoa bóp với bột hoạt thạch và bột đậu xanh","Xoa bóp với hạt cải ngâm dấm","Xoa bóp với hạt cải ngâm rượu","Xoa bóp với quế ngâm rượu"],c:3,m:"Bại liệt → quế ngâm rượu (quế nóng, mạnh)."},
+{q:"Liệu trình 1 đợt xoa bóp thường từ?",o:["6-8 ngày","10-15 ngày","20-25 ngày","25-30 ngày"],c:1,m:"1 đợt xoa bóp = 10-15 ngày. Nhớ: '1 đợt 10-15'."},
+{q:"Xoa bóp toàn thân thường từ?",o:["5-10 phút","15-20 phút","25-30 phút","45-60 phút"],c:3,m:"Toàn thân = 45-60 phút. Lâu vì phải làm hết các vùng."},
+{q:"Xoa bóp từng bộ phận thường từ?",o:["10-15 phút","20-25 phút","30-35 phút","40-45 phút"],c:1,m:"Từng bộ phận = 20-25 phút. Nhớ: 'bộ phận 20-25'."},
+{q:"Phép điều trị chứng hư là?",o:["Hãn pháp","Bổ pháp","Tả pháp","Thanh pháp"],c:1,m:"Hư → Bổ (bồi bổ). Thực → Tả (xả). Nhớ: 'Hư bổ, thực tả'."},
+{q:"Phép điều trị chứng thực là?",o:["Hãn pháp","Bổ pháp","Tả pháp","Thanh pháp"],c:2,m:"Thực → Tả (xả bớt)."},
+{q:"Điều trị chứng táo bón thường dùng?",o:["Bổ pháp","Tả pháp","Hạ pháp","Thanh pháp"],c:2,m:"Táo bón → Hạ pháp (làm thông xuống). Nhớ: 'táo bón hạ'."},
+{q:"Điều trị chứng hàn thường dùng?",o:["Bổ pháp","Thanh pháp","Tả pháp","Ôn pháp"],c:3,m:"Hàn → Ôn pháp (làm ấm). Nhớ: 'hàn ôn'."},
+{q:"Để điều trị chứng ứ trệ khí huyết thường sử dụng phép?",o:["Bổ pháp","Tả pháp","Tiêu pháp","Ôn pháp"],c:2,m:"Ứ trệ → Tiêu pháp (làm tiêu tan). Nhớ: 'ứ trệ tiêu'."},
+{q:"Để làm ra mồ hôi thường dùng phép?",o:["Bổ pháp","Hãn pháp","Tả pháp","Thanh pháp"],c:1,m:"Ra mồ hôi → Hãn pháp (hãn = mồ hôi). Nhớ: 'hãn = mồ hôi'."},
+{q:"Để điều trị bệnh thuộc bán biểu bán lý thường dùng phép?",o:["Bổ pháp","Thanh pháp","Hòa pháp","Hạ pháp"],c:2,m:"Bán biểu bán lý → Hòa pháp (hòa giải). Nhớ: 'bán biểu bán lý hòa'."},
+{q:"Để điều trị chứng có sốt thường sử dụng phép?",o:["Bổ pháp","Tiêu pháp","Hạ pháp","Thanh pháp"],c:3,m:"Sốt → Thanh pháp (làm mát). Nhớ: 'sốt thanh'."},
+{q:"Thủ thuật xoa bóp gồm bao nhiêu động tác?",o:["16 động tác","17 động tác","18 động tác","19 động tác"],c:2,m:"Xoa bóp có 18 động tác cơ bản. Nhớ: '18 động tác'."},
+{q:"Đặc điểm dược liệu sao vàng là?",o:["Bên ngoài màu vàng, bẻ ra bên trong màu vẫn như cũ","Bên ngoài xém cạnh, bẻ ra bên trong ruột như cũ","Bên ngoài cháy đen, bẻ ra bên trong còn màu vàng cũ","Bên ngoài cháy đen, bên trong màu vàng sẫm"],c:0,m:"Sao vàng: ngoài vàng, trong vẫn như cũ. Nhớ: 'vàng ngoài, cũ trong'."},
+{q:"Cây trồng cần loại phân nào?",o:["Phân hữu cơ","Phân vô cơ","Cả phân vô cơ và hữu cơ","Không cần bón phân"],c:2,m:"Cây cần cả hữu cơ (bền, dinh dưỡng) và vô cơ (nhanh). Kết hợp cả hai."},
+{q:"Không phải phương pháp chống lạnh cho cây trồng?",o:["Phủ tro","Phủ rơm","Phủ nilon cho cây","Bón phân cho cây"],c:3,m:"Bón phân không chống lạnh. Chống lạnh: phủ tro, rơm, nilon."},
+{q:"Không phải là phương pháp chống nắng cho cây trồng?",o:["Che nắng cho cây","Tưới mát","Phủ nilon","Chống nắng"],c:2,m:"Phủ nilon giữ ấm/chống lạnh, không chống nắng. Chống nắng: che, tưới mát."},
+{q:"Tính năng dược vật dựa vào bao nhiêu vị?",o:["Tam vị","Tứ vị","Ngũ vị","Lục vị"],c:2,m:"Ngũ vị: Tân (cay), Cam (ngọt), Toan (chua), Khổ (đắng), Hàm (mặn)."},
+{q:"Theo y học cổ truyền, vị cay là?",o:["Tân","Hàn","Khổ","Toan"],c:0,m:"Cay = Tân. Nhớ: 'Tân = cay'."},
+{q:"Theo y học cổ truyền, vị ngọt là?",o:["Tân","Cam","Toan","Hàm"],c:1,m:"Ngọt = Cam. Nhớ: 'Cam = ngọt'."},
+{q:"Theo y học cổ truyền, vị đắng là?",o:["Tân","Cam","Khổ","Hàm"],c:2,m:"Đắng = Khổ. Nhớ: 'Khổ = đắng'."},
+{q:"Theo y học cổ truyền, vị mặn là?",o:["Tân","Cam","Hàm","Toan"],c:2,m:"Mặn = Hàm. Nhớ: 'Hàm = mặn'."},
+{q:"Theo y học cổ truyền, vị chua là?",o:["Tân","Cam","Hàm","Toan"],c:3,m:"Chua = Toan. Nhớ: 'Toan = chua'."},
+{q:"Muốn thuốc vào kinh thận, ta sao thuốc có vị?",o:["Cay","Chua","Mặn","Ngọt"],c:2,m:"Thận → vị mặn. Nhớ: 'thận mặn'."},
+{q:"Muốn thuốc vào kinh tỳ, ta sao thuốc có vị?",o:["Cay","Chua","Mặn","Ngọt"],c:3,m:"Tỳ → vị ngọt. Nhớ: 'tỳ ngọt'."},
+{q:"Muốn thuốc vào kinh tâm, ta sao thuốc có vị?",o:["Cay","Đắng","Mặn","Ngọt"],c:1,m:"Tâm → vị đắng. Nhớ: 'tâm đắng'."},
+{q:"Muốn thuốc vào kinh phế, ta sao thuốc có vị?",o:["Cay","Đắng","Chua","Ngọt"],c:0,m:"Phế → vị cay. Nhớ: 'phế cay'."},
+{q:"Không phải là dạng thuốc đông nam dược?",o:["Thuốc thang","Thuốc hoàn","Thuốc con nhộng","Thuốc bột"],c:2,m:"Thuốc con nhộng là dạng bào chế Tây y, không phải Đông y."},
+{q:"Không phải nguồn gốc dược liệu?",o:["Động vật","Thực vật","Khoáng vật","Đất"],c:3,m:"Dược liệu có nguồn gốc: động vật, thực vật, khoáng vật. Đất không phải nguồn gốc."},
+{q:"Dược liệu bắt nguồn từ?",o:["Đất","Nước","Động vật","Cát"],c:2,m:"Dược liệu từ động vật (nhung hươu, mật ong...)."},
+{q:"Dược liệu có nguồn gốc từ?",o:["Thực vật","Đất","Nước","Cát"],c:0,m:"Dược liệu từ thực vật (cây thuốc)."},
+{q:"Dược liệu có nguồn gốc từ?",o:["Đất","Khoáng vật","Nước","Cát"],c:1,m:"Dược liệu từ khoáng vật (thạch cao, muối...)."},
+{q:"Tính năng của dược vật có bao nhiêu khí (tính)?",o:["Tam khí","Tứ khí","Ngũ khí","Lục khí"],c:1,m:"Tứ khí: Hàn, Nhiệt, Ôn, Lương. Nhớ: 'tứ khí'."},
+{q:"Dược liệu có tính hàn lương dùng để trị chứng?",o:["Đau","Lạnh","Ôn nhiệt","Mát"],c:2,m:"Hàn lương → trị chứng ôn nhiệt (nóng). Nhớ: 'lạnh trị nóng'."},
+{q:"Dược liệu có tính ôn nhiệt dùng để trị chứng?",o:["Hàn","Đau","Nhiệt","Nóng"],c:0,m:"Ôn nhiệt → trị chứng hàn (lạnh). Nhớ: 'nóng trị lạnh'."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Mã đề","Sả","Kim ngân hoa","Mắc cỡ"],c:1,m:"Sả — giải cảm, ấm, thường dùng xông cảm."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Thiên niên kiện","Kim ngân hoa","Cúc tần","Mắc cỡ"],c:2,m:"Cúc tần — giải cảm, thanh nhiệt."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Ma hoàng","Kim ngân hoa","Bồ công anh","Sài đất"],c:0,m:"Ma hoàng — phát hãn giải biểu (cảm mạo)."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Thiên niên kiện","Sài đất","Tễ tân","Mắc cỡ"],c:1,m:"Sài đất — thanh nhiệt giải độc, chữa cảm."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Mắc cỡ","Sài đất","Thiên niên kiện","Sắn dây"],c:3,m:"Sắn dây — giải cảm, thanh nhiệt, làm ra mồ hôi."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Mắc cỡ","Thiên niên kiện","Bạc hà","Bồ công anh"],c:2,m:"Bạc hà — giải cảm, thông mũi, mát."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Thiên niên kiện","Bồ công anh","Mắc cỡ","Kinh giới"],c:3,m:"Kinh giới — giải biểu, chữa cảm phong hàn."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Thiên niên kiện","Tía tô","Mắc cỡ","Bồ công anh"],c:1,m:"Tía tô — giải cảm, ấm, thường nấu cháo giải cảm."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Mắc cỡ","Cát cánh","Bồ công anh","Thiên niên kiện"],c:1,m:"Cát cánh — tuyên phế, giải cảm, chữa ho."},
+{q:"Vị thuốc có tác dụng chữa cảm cúm?",o:["Hương nhu","Râu ngô","Mắc cỡ","Thiên niên kiện"],c:0,m:"Hương nhu — phát hãn giải biểu, chữa cảm nắng."},
+{q:"Yếu tố ảnh hưởng đến việc trồng cây thuốc?",o:["Thời vụ","Thời gian","Độ ẩm","Địa hình"],c:2,m:"Độ ẩm ảnh hưởng lớn đến sinh trưởng cây thuốc."},
+{q:"Yếu tố ảnh hưởng đến việc trồng cây thuốc?",o:["Thời vụ","Ánh sáng","Thời gian","Địa hình"],c:1,m:"Ánh sáng ảnh hưởng quang hợp, chất lượng dược liệu."},
+{q:"Yếu tố ảnh hưởng đến việc trồng cây thuốc?",o:["Nhiệt độ","Thời gian","Thời vụ","Địa hình"],c:2,m:"Thời vụ (mùa trồng) ảnh hưởng năng suất, phẩm chất."},
+{q:"Trong phương pháp bào chế thuốc phiến, có bao nhiêu cách sao thuốc?",o:["2","3","4","5"],c:2,m:"4 cách sao: sao vàng, sao cháy, sao tồn tính, sao cháy cạnh."},
+{q:"Những dược liệu có tinh dầu thơm phải?",o:["Phơi ở ngoài nắng to","Sấy kỹ","Sấy ở nhiệt độ cao","Phơi trong râm mát"],c:3,m:"Tinh dầu dễ bay hơi → phơi râm mát. Nhớ: 'thơm râm mát'."},
+{q:"Dược liệu muốn sấy khô thường sấy ở nhiệt độ?",o:["20-30°C","30-40°C","40-60°C","80-100°C"],c:2,m:"Sấy dược liệu ở 40-60°C. Nhớ: 'sấy 40-60'."},
+{q:"Dược liệu thường bảo quản ở?",o:["Để dưới đất","Để trên nền ximang","Để trên gác","Để trong thùng kín hoặc bao bì"],c:3,m:"Bảo quản trong thùng kín/bao bì để tránh ẩm, mốc."},
+{q:"Đặc điểm dược liệu sao cháy là?",o:["Bên ngoài màu vàng, bẻ ra bên trong màu vẫn như cũ","Bên ngoài xém cạnh, bẻ ra bên trong ruột như cũ","Bên ngoài cháy đen, bẻ ra bên trong còn màu vàng cũ","Bên ngoài cháy đen, bên trong màu vàng sẫm"],c:3,m:"Sao cháy: ngoài đen, trong vàng sẫm. Nhớ: 'cháy đen, trong sẫm'."},
+{q:"Thuốc sao cháy đen thường có tác dụng?",o:["Giảm đau","Hạ sốt","Cầm máu","Bôi bỏ"],c:2,m:"Sao cháy đen → cầm máu. Nhớ: 'cháy đen cầm máu'."},
+{q:"Đặc điểm dược liệu sao tồn tính là?",o:["Bên ngoài màu vàng, bẻ ra bên trong màu vẫn như cũ","Bên ngoài xém cạnh, bẻ ra bên trong ruột như cũ","Bên ngoài cháy đen, bẻ ra bên trong còn màu vàng cũ","Bên ngoài cháy đen, bên trong màu vàng sẫm"],c:2,m:"Sao tồn tính: ngoài đen, trong còn vàng cũ. Nhớ: 'tồn tính = giữ tính'."},
+{q:"Đặc điểm dược liệu sao cháy cạnh là?",o:["Bên ngoài màu vàng, bẻ ra bên trong màu vẫn như cũ","Bên ngoài xém cạnh, bẻ ra bên trong ruột như cũ","Bên ngoài cháy đen, bẻ ra bên trong còn màu vàng cũ","Bên ngoài cháy đen, bên trong màu vàng sẫm"],c:1,m:"Sao cháy cạnh: ngoài xém cạnh, trong như cũ. Nhớ: 'cháy cạnh = xém cạnh'."},
+{q:"Thuốc nào không phải dạng thuốc đông nam dược?",o:["Thuốc rượu","Thuốc cao","Thuốc thang","Thuốc dán"],c:3,m:"Thuốc dán là dạng bào chế Tây y. Đông y có: thang, hoàn, rượu, cao, bột."},
+{q:"Thuốc nào không phải dạng thuốc đông nam dược?",o:["Thuốc thang","Thuốc bôi ngoài","Thuốc rượu","Thuốc bột"],c:1,m:"Thuốc bôi ngoài là cách dùng, không phải dạng bào chế Đông y."},
+{q:"Vị thuốc Cam Thảo kỵ với?",o:["Nhân Sâm","Bạch linh","Bạch truật","Đại kích"],c:3,m:"Cam thảo kỵ Đại kích (tương phản). Nhớ: 'Cam kỵ Đại kích'."},
+{q:"Thuốc ôn nhiệt không dùng cho chứng?",o:["Đau","Hàn","Lạnh","Nhiệt"],c:3,m:"Thuốc ôn nhiệt (nóng) không dùng cho chứng nhiệt (nóng) — sẽ làm nặng thêm."},
+{q:"Thuốc hàn không dùng cho chứng?",o:["Hàn","Đau","Nhiệt","Ôn"],c:0,m:"Thuốc hàn (lạnh) không dùng cho chứng hàn (lạnh) — sẽ làm lạnh thêm."},
+{q:"Thức ăn cay nóng thì không dùng với thuốc có tính?",o:["Mát","Lạnh","Hàn","Ôn nhiệt"],c:2,m:"Cay nóng + thuốc hàn → mâu thuẫn. Nhớ: 'nóng không dùng thuốc hàn'."},
+{q:"Thức ăn lạnh, tanh thì không dùng với thuốc có tính?",o:["Nhiệt","Nóng","Hàn","Ôn ấm"],c:3,m:"Lạnh tanh + thuốc ôn ấm → mâu thuẫn. Nhớ: 'lạnh không dùng thuốc ấm'."},
+{q:"Chuối không ăn chung với gì? Vì gây bí đại tiện?",o:["Cơm","Cháo","Phở","Mật"],c:3,m:"Chuối + mật → bí đại tiện. Nhớ: 'chuối mật bí'."},
+{q:"Đậu phụ không ăn với gì vì gây sỏi?",o:["Cơm","Mật","Phở","Cháo"],c:1,m:"Đậu phụ + mật → sỏi. Nhớ: 'đậu phụ mật sỏi'."},
+{q:"Không phải là nguyên tắc sử dụng dược liệu theo Y học cổ truyền?",o:["Theo kinh nghiệm dân gian, truyền khẩu","Theo sở thích","Theo gia đình, cha truyền con nối","Theo lý luận đông y"],c:1,m:"Sở thích không phải nguyên tắc. YHCT dựa: kinh nghiệm, gia truyền, lý luận."},
+{q:"Chỉ định của châm cứu?",o:["Các chứng đau cấp và mạn tính","Viêm loét ngoài da nặng","Bệnh ngoại khoa","Phụ nữ có thai trong 3 tháng đầu"],c:0,m:"Đau cấp/mạn là chỉ định chính của châm cứu."},
+{q:"Chỉ định của châm cứu?",o:["Bệnh viêm loét ngoài da nặng","Đau đầu","Bệnh ngoại khoa","Phụ nữ có thai trong 3 tháng đầu"],c:1,m:"Đau đầu — châm cứu giảm đau hiệu quả."},
+{q:"Chỉ định của châm cứu?",o:["Bệnh viêm loét ngoài da nặng","Bệnh ngoại khoa","Nấc cụt","Phụ nữ có thai trong 3 tháng đầu"],c:2,m:"Nấc cụt — châm cứu điều trị hiệu quả."},
+{q:"Chỉ định của châm cứu?",o:["Bệnh viêm loét ngoài da nặng","Bệnh ngoại khoa","Phụ nữ có thai trong 3 tháng đầu","Bí tiểu"],c:3,m:"Bí tiểu — châm cứu kích thích bài tiết."},
+{q:"Chỉ định của châm cứu?",o:["Bệnh viêm loét ngoài da nặng","Đau dây thần kinh","Bệnh ngoại khoa","Phụ nữ có thai trong 3 tháng đầu"],c:1,m:"Đau dây thần kinh — châm cứu giảm đau."},
+{q:"Chỉ định của châm cứu?",o:["Viêm dạ dày tá tràng","Bệnh ngoại khoa","Bệnh viêm loét ngoài da nặng","Phụ nữ có thai trong 3 tháng đầu"],c:0,m:"Viêm dạ dày tá tràng — châm cứu điều trị triệu chứng."},
+{q:"Vị thuốc có tác dụng chữa lỏng, lỵ?",o:["Chè","Rượu ngô","Mã đề","Bồ công anh"],c:0,m:"Chè (trà) — chữa lỏng, lỵ (astringent)."},
+{q:"Vị thuốc có tác dụng chữa lỏng, lỵ?",o:["Kim vàng","Kim ngân hoa","Búp sim","Mã đề"],c:2,m:"Búp sim — chát, cầm lỏng lỵ."},
+{q:"Vị thuốc có tác dụng chữa lỏng, lỵ?",o:["Kim vàng","Búp ổi","Rượu ngô","Kim ngân hoa"],c:1,m:"Búp ổi — chát, chữa lỏng lỵ."},
+{q:"Vị thuốc có tác dụng chữa lỏng, lỵ?",o:["Kim vàng","Lá mơ","Mã đề","Kim ngân hoa"],c:1,m:"Lá mơ — chữa lỏng, lỵ."},
+{q:"Vị thuốc có tác dụng chữa lỏng, lỵ?",o:["Bồ công anh","Ké đầu ngựa","Cỏ sữa","Kim vàng"],c:2,m:"Cỏ sữa — chữa lỏng, lỵ."},
+{q:"Vị thuốc có tác dụng chữa lỏng, lỵ?",o:["Bồ công anh","Khổ sâm cho lá","Kim vàng","Mã đề"],c:1,m:"Khổ sâm cho lá — chữa lỏng, lỵ."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Kim ngân hoa","Mã đề","Tía tô","Hoài sơn"],c:0,m:"Kim ngân hoa — kháng khuẩn mạnh."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Mã đề","Sài đất","Hoài sơn","Thổ phục linh"],c:1,m:"Sài đất — kháng khuẩn, thanh nhiệt."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Ngưu tất","Bạch hoa xà","Liên kiều","Đỗ trọng"],c:2,m:"Liên kiều — kháng khuẩn, thanh nhiệt giải độc."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Long nhãn","Lá vông nem","Kim tiền thảo","Bồ công anh"],c:3,m:"Bồ công anh — kháng khuẩn, tiêu viêm."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Ké đầu ngựa","Thục địa","Mã đề","Râu ngô"],c:0,m:"Ké đầu ngựa — kháng khuẩn, chữa viêm."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Ngưu tất","Lá lốt","Cối xay","Cây cứt lợn"],c:1,m:"Lá lốt — kháng khuẩn, ấm."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Mã đề","Hoàng liên","Lá lốt","Rễ cỏ tranh"],c:1,m:"Hoàng liên — kháng khuẩn mạnh (berberin)."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Nghệ vàng","Lá lốt","Kim vàng","Đỗ trọng"],c:0,m:"Nghệ vàng — kháng khuẩn, chống viêm."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Lá lốt","Hoàng bá","Cối xay","Ngưu tất"],c:1,m:"Hoàng bá — kháng khuẩn, thanh nhiệt táo thấp."},
+{q:"Vị thuốc có tác dụng kháng khuẩn?",o:["Lá lốt","Ngưu tất","Hoàng cầm","Kim vàng"],c:2,m:"Hoàng cầm — kháng khuẩn, thanh nhiệt."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Bạch hoa xà","Ý dĩ","Sò đũa","Lá lốt"],c:0,m:"Bạch hoa xà — lợi tiểu, thanh nhiệt."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Sả","Ngải cứu","Mộc thông","Muồng trâu"],c:2,m:"Mộc thông — lợi tiểu mạnh."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Tỳ giải","Hương nhu","Trầu bà","Ngưu tất"],c:0,m:"Tỳ giải — lợi tiểu, trừ thấp."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Bạch hoa xà","Kim vàng","Phèn đen","Quả dứa dại"],c:3,m:"Quả dứa dại — lợi tiểu."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Trạch tả","Kim vàng","Lá lốt","Kim ngân hoa"],c:0,m:"Trạch tả — lợi tiểu, trừ thấp nhiệt."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Lá lốt","Lá vông nem","Lạc tiên","Râu ngô"],c:1,m:"Lá vông nem — lợi tiểu, an thần."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Búp ổi","Búp sim","Khổ sâm cho lá","Mã đề"],c:3,m:"Mã đề — lợi tiểu, thanh nhiệt."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Bạch hoa xà","Sài đất","Búp sim","Rễ cỏ tranh"],c:3,m:"Rễ cỏ tranh — lợi tiểu, cầm máu."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Thục địa","Kim tiền thảo","Kim ngân hoa","Sài đất"],c:1,m:"Kim tiền thảo — lợi tiểu, chữa sỏi thận."},
+{q:"Vị thuốc có tác dụng lợi tiểu?",o:["Kim ngân hoa","Lá lốt","Thổ phục linh","Gừng"],c:2,m:"Thổ phục linh — lợi tiểu, thanh nhiệt."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Kim tiền thảo","Bạch hoa xà","Tắc","Mã đề"],c:0,m:"Kim tiền thảo — chữa ho, lợi tiểu."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Kim tiền thảo","Bạch hoa xà","Mã đề","Bối mẫu"],c:3,m:"Bối mẫu — chữa ho, hóa đờm."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Kim tiền thảo","Ngưu tất","Hạnh nhân","Bạch hoa xà"],c:2,m:"Hạnh nhân — chữa ho, giáng khí."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Mã đề","Bán hạ","Kim ngân","Ngưu tất"],c:1,m:"Bán hạ — chữa ho, hóa đờm."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Ngải cứu","Bạch hoa xà","Thiên môn đông","Sài đất"],c:2,m:"Thiên môn đông — chữa ho, bổ âm."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Lá hẹ","Kim tiền thảo","Ngưu tất","Bạch hoa xà"],c:0,m:"Lá hẹ — chữa ho, ấm."},
+{q:"Vị thuốc có tác dụng chữa viêm họng?",o:["Ngưu tất","Xạ can","Kim tiền thảo","Lá lốt"],c:1,m:"Xạ can — chữa viêm họng, thanh nhiệt."},
+{q:"Vị thuốc có tác dụng chữa ho, viêm họng?",o:["Thổ phục linh","Ngưu tất","Cát cánh","Cối xay"],c:2,m:"Cát cánh — chữa ho, viêm họng."},
+{q:"Vị thuốc có tác dụng chữa ho, viêm họng?",o:["Mã đề","Ngải cứu","Cối xay","Mạch môn"],c:3,m:"Mạch môn — chữa ho, viêm họng, bổ âm."},
+{q:"Vị thuốc có tác dụng chữa ho, viêm họng?",o:["Lá vông nem","Lạc tiên","Lá trầu không + Muối","Lá lốt"],c:2,m:"Lá trầu không + muối — chữa ho, viêm họng."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Mật mía","Đường","Kẹo","Mật ong + Đường phèn"],c:3,m:"Mật ong + đường phèn — chữa ho, làm dịu cổ."},
+{q:"Vị thuốc có tác dụng chữa lỏng, lỵ?",o:["Chút chít","Riềng","Thiên niên kiện","Thổ phục linh"],c:0,m:"Chút chít — chữa lỏng, lỵ."},
+{q:"Vị thuốc có tác dụng chữa lỏng, lỵ?",o:["Bồ công anh","Vỏ quả lựu","Kim ngân hoa","Sài đất"],c:1,m:"Vỏ quả lựu — chát, chữa lỏng lỵ."},
+{q:"Vị thuốc có tác dụng chữa bệnh ngoài da?",o:["Muống trầu","Mã đề","Cỏ tranh","Ngải cứu"],c:0,m:"Muống trầu — chữa bệnh ngoài da."},
+{q:"Vị thuốc có tác dụng chữa bệnh ngoài da?",o:["Mã đề","Kim tiền thảo","Riềng","Bạch đồng nữ"],c:3,m:"Bạch đồng nữ — chữa bệnh ngoài da, phụ khoa."},
+{q:"Vị thuốc có tác dụng chữa bệnh ngoài da?",o:["Ngưu tất nam","Bạch hoa xà","Râu ngô","Mã đề"],c:1,m:"Bạch hoa xà — chữa bệnh ngoài da, thanh nhiệt."},
+{q:"Vị thuốc có tác dụng chữa bệnh ngoài da?",o:["Lá lốt","Cối xay","Sò đũa","Thổ phục linh"],c:2,m:"Sò đũa — chữa bệnh ngoài da."},
+{q:"Vị thuốc có tác dụng chữa bệnh ngoài da?",o:["Kim vàng","Kim tiền thảo","Cối xay","Kiến cỏ"],c:3,m:"Kiến cỏ — chữa bệnh ngoài da."},
+{q:"Vị thuốc có tác dụng chữa bệnh ngoài da?",o:["Kim tiền thảo","Cối xay","Kiến cỏ","Kim vàng"],c:0,m:"Kim tiền thảo — chữa bệnh ngoài da, lợi tiểu."},
+{q:"Vị thuốc có tác dụng chữa bệnh dị ứng?",o:["Lá lốt","Lá đơn mặt trời","Lá cối xay","Thổ phục linh"],c:1,m:"Lá đơn mặt trời — chữa dị ứng, mẩn ngứa."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Húng chanh","Bạch hoa xà","Ngưu tất","Kim ngân hoa"],c:0,m:"Húng chanh — chữa ho, tiêu đờm."},
+{q:"Vị thuốc có tác dụng chữa ho?",o:["Ngải cứu","Gừng","Muồng trâu","Cối xay"],c:1,m:"Gừng — chữa ho, ấm."},
+{q:"Vị thuốc có tác dụng bổ khí?",o:["Đảng sâm","Thiên niên kiện","Sài đất","Kim ngân hoa"],c:0,m:"Đảng sâm — bổ khí, thay thế nhân sâm."},
+{q:"Vị thuốc có tác dụng bổ khí?",o:["Bồ công anh","Mã đề","Hoàng kỳ","Mộc thông"],c:2,m:"Hoàng kỳ — bổ khí mạnh."},
+{q:"Vị thuốc có tác dụng bổ khí?",o:["Cỏ xước","Lá lốt","Kim ngân hoa","Cam thảo bắc"],c:3,m:"Cam thảo bắc — bổ khí, điều hòa thuốc."},
+{q:"Vị thuốc có tác dụng bổ khí?",o:["Kim ngân hoa","Hoài sơn","Kim vàng","Phèn đen"],c:1,m:"Hoài sơn — bổ khí, kiện tỳ."},
+{q:"Vị thuốc có tác dụng bổ huyết?",o:["Mã đề","Kim tiền thảo","Thục địa","Kim ngân hoa"],c:2,m:"Thục địa — bổ huyết, bổ âm."},
+{q:"Vị thuốc có tác dụng bổ huyết?",o:["Bồ công anh","Kim ngân hoa","Sài đất","Đương quy"],c:3,m:"Đương quy — bổ huyết, hoạt huyết."},
+{q:"Vị thuốc có tác dụng bổ huyết?",o:["Bạch hoa xà","Câu kỷ tử","Riềng","Kiến cỏ"],c:1,m:"Câu kỷ tử — bổ huyết, bổ can thận."},
+{q:"Vị thuốc có tác dụng bổ huyết?",o:["Long nhãn","Xạ can","Trinh nữ hoàng cung","Lá trầu không"],c:0,m:"Long nhãn — bổ huyết, an thần."},
+{q:"Vị thuốc có tác dụng bổ huyết?",o:["Mã đề","Râu ngô","Quả dâu (tang thầm)","Rễ cỏ tranh"],c:2,m:"Quả dâu — bổ huyết, bổ can thận."},
+{q:"Vị thuốc có tác dụng bổ huyết?",o:["Hà thủ ô","Kim ngân hoa","Sài đất","Bồ công anh"],c:0,m:"Hà thủ ô — bổ huyết, bổ can thận."},
+{q:"Vị thuốc có tác dụng bổ âm?",o:["Mạch môn","Lá lốt","Kim vàng","Phèn đen"],c:0,m:"Mạch môn — bổ âm, nhuận phế."},
+{q:"Vị thuốc có tác dụng bổ âm?",o:["Lá mơ tam thể","Rau sam","Mai rùa (Quy bản)","Cỏ sữa"],c:2,m:"Quy bản — bổ âm, bổ thận."},
+{q:"Vị thuốc có tác dụng bổ âm?",o:["Râu ngô","Đơn sâm","Mã đề","Cối xay"],c:1,m:"Đơn sâm — bổ âm, hoạt huyết."},
+{q:"Vị thuốc có tác dụng bổ dương?",o:["Đỗ trọng","Kim vàng","Phèn đen","Kim ngân hoa"],c:0,m:"Đỗ trọng — bổ dương, bổ can thận."},
+{q:"Vị thuốc có tác dụng bổ dương?",o:["Sài đất","Ba kích","Kim ngân hoa","Bồ công anh"],c:1,m:"Ba kích — bổ dương, ấm thận."},
+{q:"Vị thuốc có tác dụng bổ dương?",o:["Xấu hổ","Lá lốt","Nhung hươu","Thiên niên kiện"],c:2,m:"Nhung hươu — bổ dương mạnh."},
+{q:"Vị thuốc có tác dụng bổ dương?",o:["Cẩu tích","Thiên niên kiện","Xấu hổ","Vòi voi"],c:0,m:"Cẩu tích — bổ dương, bổ can thận."},
+{q:"Vị thuốc có tác dụng bổ dương?",o:["Sài đất","Nhục thung dung","Kim ngân hoa","Bồ công anh"],c:1,m:"Nhục thung dung — bổ dương, ấm thận."},
+{q:"Vị thuốc có tác dụng bổ dương?",o:["Ké đầu ngựa","Liên kiều","Kim ngân hoa","Dâm dương hoắc"],c:3,m:"Dâm dương hoắc — bổ dương, mạnh gân cốt."}
+];
+
+/* ============================================================
+   KHỞI TẠO STATE
+   ============================================================ */
+const state = {
+  idx: 0,
+  answers: new Array(DATA.length).fill(null),
+  streak: 0,
+  bestStreak: 0,
+  mode: 'practice',
+  examStart: null,
+  examTimer: null,
+  examTime: 0,
+  showHint: false
+};
+
+/* ============================================================
+   DOM
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const elQNum = $('q-num'), elQText = $('q-text'), elOptions = $('options');
+const elFeedback = $('feedback'), elMnemonic = $('mnemonic');
+const elProgress = $('progress-fill');
+const elPrev = $('btn-prev'), elNext = $('btn-next'), elHint = $('btn-hint');
+const elStreak = $('streak'), elStreakVal = $('streak-val');
+const elTimer = $('timer');
+const viewQuiz = $('view-quiz'), viewReview = $('view-review'), viewResult = $('view-result');
+const reviewList = $('review-list');
+const sProgress = $('s-progress'), sCorrect = $('s-correct'), sWrong = $('s-wrong'), sScore = $('s-score');
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function letter(i){return String.fromCharCode(65+i)}
+
+function updateStats(){
+  const answered = state.answers.filter(a=>a!==null).length;
+  const correct = state.answers.reduce((acc,a,i)=>a!==null&&a===DATA[i].c?acc+1:acc,0);
+  const wrong = answered - correct;
+  const score = Math.max(0, correct*10 - wrong*5);
+  sProgress.textContent = `${state.idx+1}/${DATA.length}`;
+  sCorrect.textContent = correct;
+  sWrong.textContent = wrong;
+  sScore.textContent = score;
+  elProgress.style.width = `${((state.idx+1)/DATA.length)*100}%`;
+  elStreakVal.textContent = state.streak;
+  elStreak.style.display = state.streak >= 2 ? 'flex' : 'none';
+}
+
+function renderQuestion(){
+  const q = DATA[state.idx];
+  elQNum.textContent = `Câu hỏi ${state.idx+1} / ${DATA.length}`;
+  elQText.textContent = q.q;
+  const chosen = state.answers[state.idx];
+  const answered = chosen !== null;
+
+  elOptions.innerHTML = '';
+  q.o.forEach((opt,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    if(answered){
+      btn.classList.add('locked');
+      if(i===q.c) btn.classList.add('correct');
+      else if(i===chosen) btn.classList.add('wrong');
+    } else if(i===chosen){
+      btn.classList.add('selected');
+    }
+    btn.innerHTML = `<span class="letter">${letter(i)}</span><span>${opt}</span>`;
+    btn.onclick = ()=>choose(i);
+    elOptions.appendChild(btn);
+  });
+
+  // Feedback
+  if(answered){
+    elFeedback.className = 'feedback show ' + (chosen===q.c?'ok':'no');
+    elFeedback.innerHTML = chosen===q.c
+      ? `✅ Chính xác! Đáp án: <strong>${letter(q.c)}. ${q.o[q.c]}</strong>`
+      : `❌ Chưa đúng. Đáp án đúng: <strong>${letter(q.c)}. ${q.o[q.c]}</strong>`;
+  } else {
+    elFeedback.className = 'feedback';
+    elFeedback.innerHTML = '';
+  }
+
+  // Mnemonic (chỉ hiện khi đã trả lời hoặc bấm gợi ý)
+  if(answered || state.showHint){
+    elMnemonic.textContent = q.m;
+    elMnemonic.classList.add('show');
+  } else {
+    elMnemonic.classList.remove('show');
+  }
+
+  elPrev.disabled = state.idx === 0;
+  elNext.textContent = state.idx === DATA.length-1 ? 'Hoàn thành 🎉' : 'Tiếp theo →';
+  updateStats();
+}
+
+function choose(i){
+  if(state.answers[state.idx] !== null) return;
+  state.answers[state.idx] = i;
+  if(i === DATA[state.idx].c){
+    state.streak++;
+    if(state.streak > state.bestStreak) state.bestStreak = state.streak;
+  } else {
+    state.streak = 0;
+  }
+  state.showHint = false;
+  renderQuestion();
+  saveProgress();
+}
+
+function nextQuestion(){
+  if(state.idx < DATA.length-1){
+    state.idx++;
+    state.showHint = false;
+    renderQuestion();
+    saveProgress();
+  } else {
+    finishExam();
+  }
+}
+
+function prevQuestion(){
+  if(state.idx > 0){
+    state.idx--;
+    state.showHint = false;
+    renderQuestion();
+  }
+}
+
+/* ============================================================
+   MODE: REVIEW
+   ============================================================ */
+function renderReview(){
+  reviewList.innerHTML = '';
+  DATA.forEach((q,i)=>{
+    const userAns = state.answers[i];
+    const isCorrect = userAns !== null && userAns === q.c;
+    const item = document.createElement('div');
+    item.className = 'review-item';
+    item.innerHTML = `
+      <div class="review-q">Câu ${i+1}: ${q.q}</div>
+      <div class="review-a">Đáp án: ${letter(q.c)}. ${q.o[q.c]}</div>
+      ${userAns !== null ? `<div class="review-user ${isCorrect?'':'wrong'}">Bạn chọn: ${letter(userAns)}. ${q.o[userAns]} ${isCorrect?'✅':'❌'}</div>` : '<div class="review-user">Chưa trả lời</div>'}
+      <div class="review-mnemonic">💡 ${q.m}</div>
+    `;
+    reviewList.appendChild(item);
+  });
+}
+
+/* ============================================================
+   MODE: EXAM
+   ============================================================ */
+function startExam(){
+  state.examStart = Date.now();
+  state.examTime = 0;
+  elTimer.style.display = 'block';
+  if(state.examTimer) clearInterval(state.examTimer);
+  state.examTimer = setInterval(()=>{
+    state.examTime++;
+    const m = String(Math.floor(state.examTime/60)).padStart(2,'0');
+    const s = String(state.examTime%60).padStart(2,'0');
+    elTimer.textContent = `⏱ ${m}:${s}`;
+  },1000);
+}
+
+function finishExam(){
+  if(state.examTimer) clearInterval(state.examTimer);
+  elTimer.style.display = 'none';
+  viewQuiz.style.display = 'none';
+  viewResult.style.display = 'block';
+  const correct = state.answers.reduce((acc,a,i)=>a!==null&&a===DATA[i].c?acc+1:acc,0);
+  $('r-correct').textContent = correct;
+  $('r-total').textContent = DATA.length;
+  $('r-score').textContent = Math.max(0, correct*10 - (state.answers.filter(a=>a!==null).length-correct)*5);
+}
+
+/* ============================================================
+   MODE SWITCH
+   ============================================================ */
+document.querySelectorAll('.mode-tab').forEach(tab=>{
+  tab.onclick = ()=>{
+    document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const mode = tab.dataset.mode;
+    state.mode = mode;
+    viewResult.style.display = 'none';
+    if(mode === 'practice'){
+      viewQuiz.style.display = 'block';
+      viewReview.style.display = 'none';
+      elTimer.style.display = 'none';
+      if(state.examTimer) clearInterval(state.examTimer);
+      renderQuestion();
+    } else if(mode === 'review'){
+      viewQuiz.style.display = 'none';
+      viewReview.style.display = 'block';
+      renderReview();
+    } else if(mode === 'exam'){
+      viewQuiz.style.display = 'block';
+      viewReview.style.display = 'none';
+      renderQuestion();
+      startExam();
+    }
+  };
+});
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+elNext.onclick = nextQuestion;
+elPrev.onclick = prevQuestion;
+elHint.onclick = ()=>{
+  state.showHint = !state.showHint;
+  if(state.showHint){
+    elMnemonic.textContent = DATA[state.idx].m;
+    elMnemonic.classList.add('show');
+  } else {
+    elMnemonic.classList.remove('show');
+  }
+};
+
+$('btn-restart').onclick = ()=>{
+  state.idx = 0;
+  state.answers = new Array(DATA.length).fill(null);
+  state.streak = 0;
+  state.bestStreak = 0;
+  viewResult.style.display = 'none';
+  viewQuiz.style.display = 'block';
+  renderQuestion();
+  saveProgress();
+};
+$('btn-review-now').onclick = ()=>{
+  document.querySelector('.mode-tab[data-mode="review"]').click();
+};
+
+$('btn-export').onclick = ()=>{
+  let txt = 'KẾT QUẢ TRẮC NGHIỆM YHCT\n========================\n\n';
+  DATA.forEach((q,i)=>{
+    const ua = state.answers[i];
+    txt += `Câu ${i+1}: ${q.q}\n`;
+    txt += `Đáp án đúng: ${letter(q.c)}. ${q.o[q.c]}\n`;
+    if(ua !== null) txt += `Bạn chọn: ${letter(ua)}. ${q.o[ua]} ${ua===q.c?'✅':'❌'}\n`;
+    else txt += `Bạn chọn: (chưa trả lời)\n`;
+    txt += `Mẹo: ${q.m}\n\n`;
+  });
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ket-qua-trac-nghiem-yhct.txt';
+  a.click();
+};
+
+/* ============================================================
+   LOCALSTORAGE
+   ============================================================ */
+function saveProgress(){
+  try{
+    localStorage.setItem('yhct_progress', JSON.stringify({
+      idx: state.idx,
+      answers: state.answers,
+      bestStreak: state.bestStreak
+    }));
+  }catch(e){}
+}
+function loadProgress(){
+  try{
+    const saved = localStorage.getItem('yhct_progress');
+    if(saved){
+      const d = JSON.parse(saved);
+      if(d.answers && d.answers.length === DATA.length){
+        state.idx = d.idx || 0;
+        state.answers = d.answers;
+        state.bestStreak = d.bestStreak || 0;
+      }
+    }
+  }catch(e){}
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+loadProgress();
+renderQuestion();
+</script>
+</body>
+</html>
